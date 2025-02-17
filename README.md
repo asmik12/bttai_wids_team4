@@ -1,18 +1,37 @@
 # bttai_wids_team4
 
-To run this project on your own machine with the original, unprocessed dataset, download the publicly available dataset from Kaggle at this link, and add the contents of the `widsdatathon2025` folder to a folder named `data` in the home directory of this repository.
+This project was created as part of the **Break Through Tech AI Program** at UCLA, **Spring 2025 AI Studio Cohort**.
 
-`https://www.kaggle.com/competitions/widsdatathon2025`
+### Contributors:
+- Asmi Kawatkar
+- Arda Hoke
+- Hearty Parrenas
+- Heidi Yu
 
-Run the `data_preprocessing.ipynb` notebook first to setup and create the merged dataset. Subsequent files in this project will refer to this dataset that will be stored as `merged_data.csv` on your local machine.
+## Setup Instructions
 
-### Preprocessing Steps
-`data_preprocessing.ipynb` contains detailed documentation about the preprocessing steps taken on this data. In short, it performs the following preprocessing operations (not in order):
-1. Imports all the data into dataframes
-2. Encodes the categorical features from `TRAIN_CATEGORICAL_METADATA.XLSX` appropriately
-3. Label encodes the `ADHD_Outcome` feature from `TRAINING_SOLUTIONS.XLSX` (previously str)
-4. Checks for nan values and imputes with most frequent feature value/discards the example as appropriate.
-5. ADD
-6. ADD
-7. ADD
-8. Merges the data into one single dataframe and saves it to a csv file called `merged_data.csv`
+To run this project on your machine with the original, unprocessed dataset, follow these steps:
+
+1. Download the publicly available dataset from Kaggle:
+   - [WIDS Datathon 2025 Dataset](https://www.kaggle.com/competitions/widsdatathon2025)
+   
+2. Add the contents of the `widsdatathon2025` folder to a folder named `data` in the home directory of this repository.
+
+3. Run the `data_preprocessing.ipynb` notebook first to set up and create the merged dataset. This notebook will generate a file called `merged_data.csv` that will be used in subsequent files.
+
+## Preprocessing Steps
+
+The `data_preprocessing.ipynb` notebook contains detailed documentation about the preprocessing steps taken on the data. In brief, the following preprocessing operations are performed:
+
+1. **Imports all the data into DataFrames**.
+2. **Encodes categorical features** from `TRAIN_CATEGORICAL_METADATA.XLSX` appropriately.
+3. **Label encodes the `ADHD_Outcome` feature** from `TRAINING_SOLUTIONS.XLSX` (previously a string).
+4. **Checks for NaN values** and imputes them with the most frequent feature value or discards the example as appropriate.
+5. **ADD** – (provide more details about step 5)
+6. **ADD** – (provide more details about step 6)
+7. **ADD** – (provide more details about step 7)
+8. **Merges the data into one single DataFrame** and saves it to a CSV file called `merged_data.csv`.
+
+---
+
+For more information, please refer to the `data_preprocessing.ipynb` notebook, where each step is explained in detail.
