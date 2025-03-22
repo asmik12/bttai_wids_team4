@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, classification_report, f1_score, confusion_matrix
+from sklearn.ensemble import RandomForestClassifier
 
 
 def import_processed_data(test=False):
@@ -92,6 +93,40 @@ def decision_tree_training_and_validation(data):
     print("Accuracy:", accuracy_score(y_test_sex, y_pred_sex))
     print("Classification Report:\n", classification_report(y_test_sex, y_pred_sex))
 
+def random_forest_training_and_validation(data, female_weight=2.5):
+    #   Unpacking the data
+    adhd, sex = train_test_split_data(data)
+    X_train, X_test, y_train_adhd, y_test_adhd = adhd
+    X_train_sex, X_test_sex, y_train_sex, y_test_sex = sex
+
+    # Calculate sample weights for female category
+    sample_weights_adhd = np.ones(len(y_train_adhd))  # No weight adjustment for ADHD
+    sample_weights_sex = np.where(y_train_sex == 1, female_weight, 1)  # Assign weight to female category (Sex_F = 1)
+
+    # Train ADHD Outcome with Random Forest
+    adhd_model = RandomForestClassifier(n_estimators=90, max_depth=5, random_state=42)
+    adhd_model.fit(X_train, y_train_adhd, sample_weight=sample_weights_adhd)
+    y_pred_adhd = adhd_model.predict(X_test)
+
+    # Train Sex Classification with Random Forest
+    #sex_model = RandomForestClassifier(n_estimators=100, max_depth=8, random_state=42)
+    sex_model = RandomForestClassifier(n_estimators=150, max_depth=8, random_state=42)
+    sex_model.fit(X_train_sex, y_train_sex, sample_weight=sample_weights_sex)
+    y_pred_sex = sex_model.predict(X_test_sex)
+
+    # ADHD Model Evaluation
+    print("ADHD Model Evaluation (Random Forest):")
+    print("Accuracy:", accuracy_score(y_test_adhd, y_pred_adhd))
+    #print("Confusion Matrix:\n", confusion_matrix(y_test_adhd, y_pred_adhd))
+    #print("Classification Report:\n", classification_report(y_test_adhd, y_pred_adhd))
+
+    # Sex Prediction Model Evaluation
+    print("\nSex Model Evaluation (Random Forest):")
+    print("Accuracy:", accuracy_score(y_test_sex, y_pred_sex))
+    #print("Confusion Matrix:\n", confusion_matrix(y_test_sex, y_pred_sex))
+    #print("Classification Report:\n", classification_report(y_test_sex, y_pred_sex))
+
+
 #================= MAIN FUNCTION (TESTING ONLY)
 
 def main(test=False):
@@ -99,7 +134,8 @@ def main(test=False):
     data, participant_ids = import_processed_data(test)
     
     # Step 2: Train decision tree models and evaluate their performance
-    decision_tree_training_and_validation(data)
+    #decision_tree_training_and_validation(data)
+    random_forest_training_and_validation(data)
 
 if __name__ == "__main__":
     # Run the main function, with the option to use test data
