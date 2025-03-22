@@ -189,7 +189,21 @@ def one_hot_encode(cat_metadata, test_cat_metadata, test=False):
     
 
 def preprocess_data_pipeline(test=False):
+    """
+    Preprocesses training and test data by handling missing values, normalizing numerical columns,
+    and one-hot encoding categorical columns.
 
+    Args:
+        test (bool, optional): If True, processes and returns test data. Defaults to False.
+
+    Returns:
+        tuple: Processed training and test data:
+            - cat_metadata (DataFrame): Processed categorical training data.
+            - quant_metadata (DataFrame): Processed quantitative training data.
+            - sol (DataFrame): Target values for training data.
+            - test_cat_metadata (DataFrame): Processed categorical test data, if `test=True`.
+            - test_quant_metadata (DataFrame): Processed quantitative test data, if `test=True`.
+    """
     # Step 1: Import data
     test, data = import_data(test)
     print("Data has been imported.")
