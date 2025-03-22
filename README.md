@@ -34,4 +34,7 @@ The `data_preprocessing.ipynb` notebook contains detailed documentation about th
 
 ---
 
+## Notes to update future readme:
+- Run the code using commands like `python data_processing_utils.py` and not `python3`  
+
 For more information, please refer to the `data_preprocessing.ipynb` notebook, where each step is explained in detail.
