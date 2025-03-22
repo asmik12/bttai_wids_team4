@@ -1,11 +1,8 @@
 #Importing the required libraries
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 
 def import_data(test=False):
@@ -25,19 +22,18 @@ def import_data(test=False):
             - 'train': List of training datasets (categorical metadata, quantitative metadata, solutions).
     """
     test_cat_metadata, test_quant_metadata = None, None
-    data = {'test':[], 'train':[]}
 
     if test:
         test_cat_metadata = pd.read_excel('data/TEST/TEST_CATEGORICAL.xlsx') # Categorical metadata
         test_quant_metadata = pd.read_excel('data/TEST/TEST_QUANTITATIVE_METADATA.xlsx') # Quantitative metadata
-        data['test'] = [test_cat_metadata, test_quant_metadata]
-    else:
-        # Importing and preprocessing the dataset
-        cat_metadata = pd.read_excel('data/TRAIN/TRAIN_CATEGORICAL_METADATA.xlsx') # Categorical metadata
-        quant_metadata = pd.read_excel('data/TRAIN/TRAIN_QUANTITATIVE_METADATA.xlsx') # Quantitative metadata
-        sol = pd.read_excel('data/TRAIN/TRAINING_SOLUTIONS.xlsx') # Solutions to the training data examples
-        
-        data['train'] = [cat_metadata, quant_metadata, sol]
+
+
+    # Importing and preprocessing the training dataset
+    cat_metadata = pd.read_excel('data/TRAIN/TRAIN_CATEGORICAL_METADATA.xlsx') # Categorical metadata
+    quant_metadata = pd.read_excel('data/TRAIN/TRAIN_QUANTITATIVE_METADATA.xlsx') # Quantitative metadata
+    sol = pd.read_excel('data/TRAIN/TRAINING_SOLUTIONS.xlsx') # Solutions to the training data examples
+
+    data = pack_data(cat_metadata, quant_metadata, sol, test_cat_metadata, test_quant_metadata)
 
     return test, data
 
@@ -56,8 +52,8 @@ def pack_data(cat_metadata, quant_metadata, sol, test_cat_metadata=None, test_qu
         dict: A dictionary with 'train' and 'test' keys containing respective datasets.
     """
     data = {'test':[], 'train':[]}
-    data['test'].append(test_cat_metadata, test_quant_metadata)
-    data['train'].append(cat_metadata,quant_metadata, sol)
+    data['test']= [test_cat_metadata, test_quant_metadata]
+    data['train'] = [cat_metadata,quant_metadata, sol]
     return data
 
 def unpack_data(data, test):
@@ -109,7 +105,7 @@ def process_nan_data(cat_metadata, quant_metadata, test_cat_metadata, test_quant
     # Doing the same for test data
     if test:
         col = 'PreInt_Demos_Fam_Child_Ethnicity'
-        test_cat_metadata[col] = test_cat_metadata[col].fillna(test_cat_metadata[col].mode()[0])
+        test_cat_metadata.loc[col] = test_cat_metadata[col].fillna(test_cat_metadata[col].mode()[0])
         print(f"Imputed NAN values for test categorical data. Current NAN values:{test_cat_metadata.isna().sum().sum()}")
 
         col = 'MRI_Track_Age_at_Scan'
@@ -176,35 +172,24 @@ def one_hot_encode(cat_metadata, test_cat_metadata, test=False):
     # Create a DataFrame for the encoded data
     cat_encoded = pd.DataFrame(encoded_cat_data, columns=encoded_cols, index=cat_metadata.index)
 
-    # Add the encoded columns back to the original DataFrame
+    # Add the encoded columns back to the original DataFrame and drop the original categorical columns
+    cat_metadata = cat_metadata.drop(columns=one_hot_encode_cols)
     cat_metadata = pd.concat([cat_metadata, cat_encoded], axis=1)
-    print("One hot encoded categorical columns.")
+    print("One hot encoded categorical columns in training data.")
     
     if test:
-        encoded_test = one_hot_encode(test_cat_metadata)
-    
+        test_encoded_metadata = encoder.fit_transform(test_cat_metadata[one_hot_encode_cols]).toarray()
+        encoded_cols = encoder.get_feature_names_out(one_hot_encode_cols)
+        test_encoded = pd.DataFrame(test_encoded_metadata, columns=encoded_cols, index=test_cat_metadata.index)
+        test_cat_metadata = test_cat_metadata.drop(columns=one_hot_encode_cols)
+        test_cat_metadata = pd.concat([test_cat_metadata, test_encoded], axis=1)
+        print("One hot encoded categorical columns in test data.")
+
     return cat_metadata, test_cat_metadata
     
 
 def preprocess_data_pipeline(test=False):
-    """
-    Complete data preprocessing pipeline for both training and test datasets.
 
-    The pipeline includes:
-        - Importing the data.
-        - Packing the data into a structured format.
-        - Handling missing values in categorical and quantitative metadata.
-        - Normalizing numerical columns.
-        - One-hot encoding categorical columns.
-
-    Args:
-        test (bool, optional): Whether to process test data. Defaults to False.
-
-    Returns:
-        tuple: Processed data, including:
-            - Normalized and encoded training data.
-            - Normalized and encoded test data (if `test=True`).
-    """
     # Step 1: Import data
     test, data = import_data(test)
     print("Data has been imported.")
@@ -225,45 +210,35 @@ def preprocess_data_pipeline(test=False):
     return cat_metadata, quant_metadata, sol, test_cat_metadata, test_quant_metadata
 
 def convert_to_csv(cat_metadata, quant_metadata, sol, test_cat_metadata, test_quant_metadata, test=False):
-
-    if test:
-        metadata_file = 'test_processed_data.csv'
-    else:
-        test_metadata_file = 'train_processed_data.csv'
-
+    """
+    Merges and saves processed metadata for both training and test datasets to CSV files.
+    
+    Args:
+        cat_metadata (DataFrame): The categorical metadata for the dataset.
+        quant_metadata (DataFrame): The quantitative metadata for the dataset.
+        sol (DataFrame): The solution or target values associated with the data.
+        test_cat_metadata (DataFrame): The categorical metadata for the test dataset (if test=True).
+        test_quant_metadata (DataFrame): The quantitative metadata for the test dataset (if test=True).
+        test (bool, optional): Flag to indicate whether to process test data. Defaults to False.
+        
+    Saves:
+        If `test` is False, it saves the merged training data (cat_metadata, quant_metadata, and sol) to a file named 
+        'train_processed_data.csv'. If `test` is True, it saves the merged test data (test_cat_metadata, test_quant_metadata) 
+        to a file named 'test_processed_data.csv'.
+    """
+    
+    metadata_file = 'processed_data/train_processed_data.csv'
     combined_data = cat_metadata.merge(quant_metadata, on='participant_id', how='inner')
     combined_data = combined_data.merge(sol, on='participant_id', how='inner')
-    quant_metadata.to_csv(metadata_file, index=False)
-    print(f"Training quantitative metadata saved to {metadata_file}")
+    combined_data.to_csv(metadata_file, index=False)
+    print(f"Training metadata saved to {metadata_file}")
 
     if test:
+        test_metadata_file = 'processed_data/test_processed_data.csv'
         test_combined_data = test_cat_metadata.merge(test_quant_metadata, on='participant_id', how='inner')
         test_combined_data.to_csv(test_metadata_file, index=False)
         print(f"Test metadata saved to {test_metadata_file}")
 
+        print(f"Verified that data columns match: {len(test_combined_data.columns)-2 == len(combined_data.columns)}")
+
     return
-
-
-def main(test=False):
-    """
-    Main function to execute the entire data preprocessing pipeline, followed by 
-    further steps such as model building or evaluation.
-
-    Args:
-        test (bool, optional): If True, processes test data. Defaults to False.
-    """
-    # Step 1: Preprocess the data (import, clean, normalize, encode)
-    cat_metadata, quant_metadata, sol, test_cat_metadata, test_quant_metadata = preprocess_data_pipeline(test)
-    
-    # Step 2: Further steps - Add code here to build and evaluate a model
-    # Example: Train a model using the processed data
-    if not test:
-        print("Training data is ready. Proceeding with model training...")
-        # Here, you can call functions for model training, e.g., a machine learning model or deep learning model
-    
-    else:
-        print("Test data is ready. Proceeding with model evaluation...")
-        # Here, you can call functions for model evaluation using the processed test data
-
-if __name__ == "__main__":
-    main(test=False)

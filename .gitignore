@@ -3,3 +3,4 @@ venv/
 merged_data.csv
 submission.csv
 past_submissions/
+processed_data/
