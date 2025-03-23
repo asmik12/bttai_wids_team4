@@ -4,7 +4,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, classification_report, f1_score, confusion_matrix
 from sklearn.ensemble import RandomForestClassifier
-
+from xgboost import XGBClassifier
+from model_utils import load_benchmark, save_benchmark
 
 def import_processed_data(test=False):
     """
@@ -93,7 +94,7 @@ def decision_tree_training_and_validation(data):
     print("Accuracy:", accuracy_score(y_test_sex, y_pred_sex))
     print("Classification Report:\n", classification_report(y_test_sex, y_pred_sex))
 
-def random_forest_training_and_validation(data, female_weight=2.5):
+def random_forest_training_and_validation(data, female_weight=1.5):
     #   Unpacking the data
     adhd, sex = train_test_split_data(data)
     X_train, X_test, y_train_adhd, y_test_adhd = adhd
@@ -109,8 +110,7 @@ def random_forest_training_and_validation(data, female_weight=2.5):
     y_pred_adhd = adhd_model.predict(X_test)
 
     # Train Sex Classification with Random Forest
-    #sex_model = RandomForestClassifier(n_estimators=100, max_depth=8, random_state=42)
-    sex_model = RandomForestClassifier(n_estimators=150, max_depth=8, random_state=42)
+    sex_model = RandomForestClassifier(n_estimators=10, max_depth=8, random_state=42)
     sex_model.fit(X_train_sex, y_train_sex, sample_weight=sample_weights_sex)
     y_pred_sex = sex_model.predict(X_test_sex)
 
@@ -126,6 +126,90 @@ def random_forest_training_and_validation(data, female_weight=2.5):
     #print("Confusion Matrix:\n", confusion_matrix(y_test_sex, y_pred_sex))
     #print("Classification Report:\n", classification_report(y_test_sex, y_pred_sex))
 
+def xgboost_sex_classification(data, female_weight=3.5):
+    benchmark_file = 'benchmark.json'
+    benchmark = load_benchmark(benchmark_file)
+
+    #Unpacking the data
+    _, sex = train_test_split_data(data)
+    X_train_sex, X_test_sex, y_train_sex, y_test_sex = sex
+
+    # Initialize the XGBoost model with specific parameters
+    xgb_model = XGBClassifier(
+        random_state=42,
+        scale_pos_weight=female_weight,  # Adjusting weight for female class
+        n_estimators=100,                # Number of trees in the forest
+        max_depth=8,                     # Maximum depth of the trees
+        learning_rate=0.2,               # Learning rate for boosting
+        objective='binary:logistic'      # Binary classification for sex (0 or 1)
+    )
+    
+    # Train the model
+    xgb_model.fit(X_train_sex, y_train_sex)
+
+    # Predict on the test set
+    y_pred_sex = xgb_model.predict(X_test_sex)
+
+    accuracy = accuracy_score(y_test_sex, y_pred_sex)
+    if accuracy > benchmark:
+        model_path = 'xgb_best_model.json'
+        print(f"\nNew benchmark reached! Saving model to {model_path}...\n")
+        xgb_model.save_model(model_path)  # Save model
+        save_benchmark(accuracy, benchmark_file)  # Update benchmark
+        print("Model saved successfully!")
+
+    # Evaluation of the XGBoost Model
+    print("XGBoost Model Evaluation (Sex Classification):")
+    print("Accuracy:", accuracy)
+    print("Confusion Matrix:\n", confusion_matrix(y_test_sex, y_pred_sex))
+    print("Classification Report:\n", classification_report(y_test_sex, y_pred_sex))
+
+def xgboost_adhd_classification(data, adhd_weight=2.5):
+    benchmark_file = 'adhd_benchmark.json'
+    benchmark = load_benchmark(benchmark_file)
+
+    # Unpacking the data (assuming ADHD labels are included)
+    _, adhd = train_test_split_data(data)
+    X_train_adhd, X_test_adhd, y_train_adhd, y_test_adhd = adhd
+
+    # Adjust sample weights: More weight to ADHD-positive cases
+    sample_weights = [
+        adhd_weight if adhd == 1 else 1  # More weight to ADHD-positive cases
+        for adhd in y_train_adhd
+    ]
+
+    # Initialize the XGBoost model
+    xgb_model = XGBClassifier(
+        random_state=42,
+        scale_pos_weight=adhd_weight,  # Adjusting weight for ADHD class
+        n_estimators=100,              # Increased trees for better learning
+        max_depth=8,                   # Slightly shallower trees to prevent overfitting
+        learning_rate=0.07,             # Balanced learning rate
+        objective='binary:logistic',   # Binary classification (ADHD or not)
+        tree_method='hist'             # Faster training
+    )
+
+    # Train the model
+    xgb_model.fit(X_train_adhd, y_train_adhd, sample_weight=sample_weights)
+
+    # Predict on the test set
+    y_pred_adhd = xgb_model.predict(X_test_adhd)
+
+    accuracy = accuracy_score(y_test_adhd, y_pred_adhd)
+    
+    # Save model only if accuracy exceeds benchmark
+    if accuracy > benchmark:
+        model_path = 'xgb_best_adhd_model.json'
+        print(f"\nNew benchmark reached! Saving model to {model_path}...\n")
+        xgb_model.save_model(model_path)
+        save_benchmark(accuracy, benchmark_file)
+        print("Model saved successfully!")
+
+    # Evaluation of the XGBoost Model
+    print("XGBoost Model Evaluation (ADHD Classification):")
+    print("Accuracy:", accuracy)
+    print("Confusion Matrix:\n", confusion_matrix(y_test_adhd, y_pred_adhd))
+    print("Classification Report:\n", classification_report(y_test_adhd, y_pred_adhd))
 
 #================= MAIN FUNCTION (TESTING ONLY)
 
@@ -135,7 +219,8 @@ def main(test=False):
     
     # Step 2: Train decision tree models and evaluate their performance
     #decision_tree_training_and_validation(data)
-    random_forest_training_and_validation(data)
+    #random_forest_training_and_validation(data)
+    xgboost_adhd_classification(data)
 
 if __name__ == "__main__":
     # Run the main function, with the option to use test data
