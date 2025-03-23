@@ -10,11 +10,12 @@ def load_model(model_path):
     model.load_model(model_path)
     return model
 
-def save_predictions_to_csv(predictions, participant_ids, filename="predictions.csv"):
+def save_predictions_to_csv(adhd_predictions, sex_predictions, participant_ids, filename="predictions.csv"):
     """Save the predictions along with participant IDs to a CSV file."""
     output_df = pd.DataFrame({
         'participant_id': participant_ids,
-        'prediction': predictions
+        'ADHD_Outcome': adhd_predictions,
+        'Sex_F': sex_predictions
     })
     output_df.to_csv(filename, index=False)
     print(f"Predictions saved to {filename}")
@@ -41,9 +42,11 @@ def main():
     adhd_predictions = predict_with_model(adhd_model, test_data)
     sex_predictions = predict_with_model(sex_model, test_data)
 
+    adhd_predictions = 1 - adhd_predictions
+    sex_predictions =  1- sex_predictions
+
     # Save the predictions to CSV files
-    save_predictions_to_csv(adhd_predictions, participant_ids, filename="adhd_predictions.csv")
-    save_predictions_to_csv(sex_predictions, participant_ids, filename="sex_predictions.csv")
+    save_predictions_to_csv( adhd_predictions, sex_predictions, participant_ids, filename="predictions.csv")
 
 if __name__ == "__main__":
     main()

@@ -183,8 +183,8 @@ def xgboost_adhd_classification(data, adhd_weight=2.5):
         random_state=42,
         scale_pos_weight=adhd_weight,  # Adjusting weight for ADHD class
         n_estimators=100,              # Increased trees for better learning
-        max_depth=8,                   # Slightly shallower trees to prevent overfitting
-        learning_rate=0.07,             # Balanced learning rate
+        max_depth=30,                   # Slightly shallower trees to prevent overfitting
+        learning_rate=0.1,             # Balanced learning rate
         objective='binary:logistic',   # Binary classification (ADHD or not)
         tree_method='hist'             # Faster training
     )
@@ -220,7 +220,8 @@ def main(test=False):
     # Step 2: Train decision tree models and evaluate their performance
     #decision_tree_training_and_validation(data)
     #random_forest_training_and_validation(data)
-    xgboost_adhd_classification(data)
+    #xgboost_adhd_classification(data)
+    xgboost_sex_classification(data)
 
 if __name__ == "__main__":
     # Run the main function, with the option to use test data

@@ -98,19 +98,29 @@ def process_nan_data(cat_metadata, quant_metadata, test_cat_metadata, test_quant
 
     # Discarding the nan values for quant metadata
     col = 'MRI_Track_Age_at_Scan'
-    quant_metadata = quant_metadata.dropna(subset=col)
+    quant_metadata[col] = quant_metadata[col].fillna(quant_metadata[col].mode()[0])
     print(f"Discarded NAN values for train quant metadata: {col}. Current NAN values:{quant_metadata.isna().sum().sum()}")
     
 
     # Doing the same for test data
     if test:
-        col = 'PreInt_Demos_Fam_Child_Ethnicity'
-        test_cat_metadata.loc[col] = test_cat_metadata[col].fillna(test_cat_metadata[col].mode()[0])
+        # Impute categorical columns with the mode
+        for col in test_cat_metadata.columns:
+            if test_cat_metadata[col].isna().sum() > 0:  # Check if there are missing values
+                test_cat_metadata[col] = test_cat_metadata[col].fillna(test_cat_metadata[col].mode()[0])
+                print(f"Imputed NAN values for categorical column: {col}. Current NAN values: {test_cat_metadata.isna().sum().sum()}")
         print(f"Imputed NAN values for test categorical data. Current NAN values:{test_cat_metadata.isna().sum().sum()}")
+        print(test_cat_metadata.isna().sum())
 
-        col = 'MRI_Track_Age_at_Scan'
-        test_quant_metadata = test_quant_metadata.dropna(subset=col)
+        # Impute quantitative columns with the mean
+        for col in test_quant_metadata.columns:
+            if test_quant_metadata[col].isna().sum() > 0:  # Check if there are missing values
+                test_quant_metadata[col] = test_quant_metadata[col].fillna(test_quant_metadata[col].mean())
+                print(f"Imputed NAN values for quantitative column: {col}. Current NAN values: {test_quant_metadata.isna().sum().sum()}")
+
+        
         print(f"Dropped NAN values for test quantitative data. Current NAN values:{test_quant_metadata.isna().sum().sum()}")
+        print(test_quant_metadata.isna().sum())
 
     return [cat_metadata, quant_metadata, test_cat_metadata, test_quant_metadata] 
 
@@ -218,7 +228,7 @@ def preprocess_data_pipeline(test=False):
     quant_metadata, test_quant_metadata = normalize_cols(quant_metadata, test_quant_metadata, test)
 
     # Step 5: One-hot encode categorical columns
-    cat_metadata, test_cat_metadata = one_hot_encode(cat_metadata, test_cat_metadata, test)
+    #cat_metadata, test_cat_metadata = one_hot_encode(cat_metadata, test_cat_metadata, test)
     
     # Return processed data
     return cat_metadata, quant_metadata, sol, test_cat_metadata, test_quant_metadata
