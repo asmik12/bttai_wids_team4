@@ -1,41 +1,62 @@
-# bttai_wids_team4
+# 🚀 bttai_wids_team4
+Welcome to our WIDS Datathon 2025 project! 🎉 This repository contains our team's journey through data preprocessing, exploratory data analysis (EDA), and machine learning model development.
 
-This project was created as part of the **Break Through Tech AI Program** at UCLA, **Spring 2025 AI Studio Cohort**.
+Developed as part of the Break Through Tech AI Program at UCLA, this project showcases our approach to solving a real-world data challenge.
 
-### Contributors:
-- Asmi Kawatkar
-- Arda Hoke
-- Hearty Parrenas
-- Heidi Yu
+👥 Team Members
+* Asmi Kawatkar
+* Arda Hoke
+* Hearty Parrenas
+* Heidi Yu
 
-## Setup Instructions
+## 📌 What's Inside?
+Here's a quick breakdown of what you'll find in this repo:
 
-To run this project on your machine with the original, unprocessed dataset, follow these steps:
+📂 Notebooks
+* 📊 data_preprocessing.ipynb → Data cleaning & transformation
+* 🔍 eda.ipynb → Exploratory data analysis
+* 🌲 dec_tree.ipynb → Decision tree model implementation
 
-1. Download the publicly available dataset from Kaggle:
-   - [WIDS Datathon 2025 Dataset](https://www.kaggle.com/competitions/widsdatathon2025)
-   
-2. Add the contents of the `widsdatathon2025` folder to a folder named `data` in the home directory of this repository.
+📂 Python Scripts
+* ⚙️ main.py → The main script to run everything!
+* 🤖 model.py → Defines machine learning models
+* 🛠️ model_utils.py → Helper functions for training & evaluation
+* 🏗️ data_processing_utils.py → Utility functions for data handling
 
-3. Run the `data_preprocessing.ipynb` notebook first to set up and create the merged dataset. This notebook will generate a file called `merged_data.csv` that will be used in subsequent files.
+📂 Model Outputs
+* 📈 predictions.csv → Model-generated predictions
+* 🏆 xgb_best_model.json → Our best XGBoost model
+* 🎯 xgb_best_adhd_model.json → Specialized ADHD-focused XGBoost model
+* 📊 benchmark.json → Model performance metrics
+* 🧠 adhd_benchmark.json → Benchmarking for ADHD-specific predictions
 
-## Preprocessing Steps
+## 🚀 Getting Started
+Want to run this project yourself? Follow these steps:
 
-The `data_preprocessing.ipynb` notebook contains detailed documentation about the preprocessing steps taken on the data. In brief, the following preprocessing operations are performed:
+1️. Download the Dataset
+Get the data from Kaggle
 
-1. **Imports all the data into DataFrames**.
-2. **Encodes categorical features** from `TRAIN_CATEGORICAL_METADATA.XLSX` appropriately.
-3. **Label encodes the `ADHD_Outcome` feature** from `TRAINING_SOLUTIONS.XLSX` (previously a string).
-4. **Checks for NaN values** and imputes them with the most frequent feature value or discards the example as appropriate.
-5. **ADD** – (provide more details about step 5)
-6. **ADD** – (provide more details about step 6)
-7. **ADD** – (provide more details about step 7)
-8. **Merges the data into one single DataFrame** and saves it to a CSV file called `merged_data.csv`.
+2️. Organize Your Files
+Move the downloaded widsdatathon2025 folder into a new directory:
+```
+mkdir data
+mv path_to_downloaded_folder/* data/
+```
 
----
+3. Set Up Your Environment
+Install the necessary dependencies:
 
-## Notes to update future readme:
+```
+pip install -r requirements.txt
+```
+4. Run the Full Pipeline
+Want to execute everything in one go? Run:
+
+```
+python main.py
+```
+
+## Notes:
 - Run the code using commands like `python data_processing_utils.py` and not `python3`  
-- Current issue: there are a bunch of NAN values in the test data. Need to figure out where they are and how to impute them.
 
 For more information, please refer to the `data_preprocessing.ipynb` notebook, where each step is explained in detail.
